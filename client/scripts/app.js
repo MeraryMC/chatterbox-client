@@ -1,10 +1,9 @@
+
 var App = {
 
   $spinner: $('.spinner img'),
 
   username: 'anonymous',
-
-  currentRoomName: $('#rooms select option:selected').text(),
 
   initialize: function() {
     App.username = window.location.search.substr(10);
@@ -17,16 +16,20 @@ var App = {
     App.startSpinner();
     App.fetch(App.stopSpinner);
 
-  },
+
+    // Poll for new messages every 3 sec
+    setInterval(App.fetch, 3000);
+      },
 
   fetch: function(callback = ()=>{}) {
     Parse.readAll((data) => {
-      // examine the response from the server request:
-      // console.log("This is from app.js: " +data);
-      Messages.data = data.results;
-      RoomsView.data = data.results;
-      // console.log(this.currentRoomName);
-      MessagesView.renderAllMessages(data.results, this.currentRoomName);
+
+      // Don't bother to update if we have no messages
+      if (!data.results || !data.results.length) { return; }
+
+      Rooms.update(data.results, RoomsView.render);
+      Messages.update(data.results, MessagesView.render);
+
       callback();
     });
   },
@@ -39,10 +42,5 @@ var App = {
   stopSpinner: function() {
     App.$spinner.fadeOut('fast');
     FormView.setStatus(false);
-  },
-
-  // addFriend: function(){
-  //   MessagesView.addFriend();
-  // }
-
+  }
 };
